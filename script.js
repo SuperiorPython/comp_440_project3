@@ -88,6 +88,7 @@ function gameLoop(timestamp) {
         updateVaultNoise(deltaTime);
         updateCooldown(deltaTime);
         updateBeacons(deltaTime);
+        updateGuards();
         updateHUD();
         drawGame();
 
@@ -132,6 +133,57 @@ function updateHUD() {
     } else {
         cooldownDisplay.textContent = beaconCooldown.toFixed(1) + "s";
     }
+}
+
+function updateGuards() {
+    guards.forEach(function(guard) {
+        const target = findLoudestSoundSource(guard);
+
+        guard.targetX = target.x;
+        guard.targetY = target.y;
+
+        moveGuardTowardTarget(guard);
+    });
+}
+
+function findLoudestSoundSource(guard) {
+    let loudestSource = {
+        x: vault.x,
+        y: vault.y,
+        strength: vault.noiseLevel
+    };
+
+    beacons.forEach(function(beacon) {
+        const beaconDistance = getDistance(guard.x, guard.y, beacon.x, beacon.y);
+        const vaultDistance = getDistance(guard.x, guard.y, vault.x, vault.y);
+
+        const beaconPull = beacon.strength / Math.max(beaconDistance, 1);
+        const vaultPull = vault.noiseLevel / Math.max(vaultDistance, 1);
+
+        if (beaconPull > vaultPull) {
+            loudestSource = beacon;
+        }
+    });
+
+    return loudestSource;
+}
+
+function moveGuardTowardTarget(guard) {
+    const dx = guard.targetX - guard.x;
+    const dy = guard.targetY - guard.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 1) {
+        guard.x += (dx / distance) * guard.speed;
+        guard.y += (dy / distance) * guard.speed;
+    }
+}
+
+function getDistance(x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 function drawGame() {
