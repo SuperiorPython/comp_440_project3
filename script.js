@@ -1,1 +1,103 @@
-console.log("Echo Vault loaded");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const timeDisplay = document.getElementById("time-display");
+const noiseDisplay = document.getElementById("noise-display");
+const cooldownDisplay = document.getElementById("cooldown-display");
+const messageDisplay = document.getElementById("message");
+const restartButton = document.getElementById("restart-button");
+
+let gameState;
+let survivalTime;
+let lastTimestamp;
+
+let vault;
+let guards;
+let beacons;
+let beaconCooldown;
+
+const WIN_TIME = 90;
+const VAULT_RADIUS = 30;
+const STARTING_VAULT_NOISE = 10;
+const VAULT_NOISE_GROWTH = 0.15;
+
+function initGame() {
+    gameState = "playing";
+    survivalTime = 0;
+    lastTimestamp = 0;
+    beaconCooldown = 0;
+
+    vault = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        noiseLevel: STARTING_VAULT_NOISE
+    };
+
+    guards = [
+        { x: 80, y: 80, speed: 1.5, targetX: vault.x, targetY: vault.y },
+        { x: 720, y: 80, speed: 1.5, targetX: vault.x, targetY: vault.y },
+        { x: 400, y: 440, speed: 1.5, targetX: vault.x, targetY: vault.y }
+    ];
+
+    beacons = [];
+
+    messageDisplay.textContent = "Click anywhere inside the room to place a sound beacon.";
+
+    updateHUD();
+    drawGame();
+}
+
+function updateHUD() {
+    timeDisplay.textContent = Math.floor(survivalTime);
+    noiseDisplay.textContent = Math.floor(vault.noiseLevel);
+
+    if (beaconCooldown <= 0) {
+        cooldownDisplay.textContent = "Ready";
+    } else {
+        cooldownDisplay.textContent = beaconCooldown.toFixed(1) + "s";
+    }
+}
+
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawVault();
+    drawGuards();
+    drawBeacons();
+}
+
+function drawVault() {
+    ctx.beginPath();
+    ctx.arc(vault.x, vault.y, VAULT_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = "#facc15";
+    ctx.fill();
+    ctx.strokeStyle = "white";
+    ctx.stroke();
+
+    ctx.fillStyle = "black";
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("VAULT", vault.x, vault.y + 5);
+}
+
+function drawGuards() {
+    guards.forEach(function(guard) {
+        ctx.beginPath();
+        ctx.arc(guard.x, guard.y, 15, 0, Math.PI * 2);
+        ctx.fillStyle = "#ef4444";
+        ctx.fill();
+    });
+}
+
+function drawBeacons() {
+    beacons.forEach(function(beacon) {
+        ctx.beginPath();
+        ctx.arc(beacon.x, beacon.y, 12, 0, Math.PI * 2);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fill();
+    });
+}
+
+restartButton.addEventListener("click", initGame);
+
+initGame();
