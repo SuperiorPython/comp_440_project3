@@ -20,6 +20,9 @@ const WIN_TIME = 90;
 const VAULT_RADIUS = 30;
 const STARTING_VAULT_NOISE = 10;
 const VAULT_NOISE_GROWTH = 0.15;
+const BEACON_DURATION = 5;
+const BEACON_COOLDOWN = 2;
+const BEACON_STRENGTH = 60;
 
 function initGame() {
     gameState = "playing";
@@ -49,6 +52,28 @@ function initGame() {
     requestAnimationFrame(gameLoop);
 }
 
+function placeBeacon(event) {
+    if (gameState !== "playing") {
+        return;
+    }
+
+    if (beaconCooldown > 0) {
+        return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+
+    const beacon = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+        strength: BEACON_STRENGTH,
+        timeLeft: BEACON_DURATION
+    };
+
+    beacons.push(beacon);
+    beaconCooldown = BEACON_COOLDOWN;
+}
+
 function gameLoop(timestamp) {
     if (lastTimestamp === 0) {
         lastTimestamp = timestamp;
@@ -62,6 +87,7 @@ function gameLoop(timestamp) {
 
         updateVaultNoise(deltaTime);
         updateCooldown(deltaTime);
+        updateBeacons(deltaTime);
         updateHUD();
         drawGame();
 
@@ -75,6 +101,16 @@ function gameLoop(timestamp) {
 
 function updateVaultNoise(deltaTime) {
     vault.noiseLevel += VAULT_NOISE_GROWTH * deltaTime;
+}
+
+function updateBeacons(deltaTime) {
+    for (let i = beacons.length - 1; i >= 0; i--) {
+        beacons[i].timeLeft -= deltaTime;
+
+        if (beacons[i].timeLeft <= 0) {
+            beacons.splice(i, 1);
+        }
+    }
 }
 
 function updateCooldown(deltaTime) {
@@ -148,6 +184,7 @@ function endGame(result) {
     }
 }
 
+canvas.addEventListener("click", placeBeacon);
 restartButton.addEventListener("click", initGame);
 
 initGame();
