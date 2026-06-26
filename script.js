@@ -45,6 +45,46 @@ function initGame() {
 
     updateHUD();
     drawGame();
+
+    requestAnimationFrame(gameLoop);
+}
+
+function gameLoop(timestamp) {
+    if (lastTimestamp === 0) {
+        lastTimestamp = timestamp;
+    }
+
+    const deltaTime = (timestamp - lastTimestamp) / 1000;
+    lastTimestamp = timestamp;
+
+    if (gameState === "playing") {
+        survivalTime += deltaTime;
+
+        updateVaultNoise(deltaTime);
+        updateCooldown(deltaTime);
+        updateHUD();
+        drawGame();
+
+        if (survivalTime >= WIN_TIME) {
+            endGame("win");
+        }
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+function updateVaultNoise(deltaTime) {
+    vault.noiseLevel += VAULT_NOISE_GROWTH * deltaTime;
+}
+
+function updateCooldown(deltaTime) {
+    if (beaconCooldown > 0) {
+        beaconCooldown -= deltaTime;
+    }
+
+    if (beaconCooldown < 0) {
+        beaconCooldown = 0;
+    }
 }
 
 function updateHUD() {
@@ -96,6 +136,16 @@ function drawBeacons() {
         ctx.fillStyle = "#38bdf8";
         ctx.fill();
     });
+}
+
+function endGame(result) {
+    gameState = result;
+
+    if (result === "win") {
+        messageDisplay.textContent = "You protected the vault. You win!";
+    } else {
+        messageDisplay.textContent = "A guard reached the vault. Game over.";
+    }
 }
 
 restartButton.addEventListener("click", initGame);
