@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    background-color: #111827;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#game-container {
+    width: 850px;
+    margin: 20px auto;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+#hud {
+    display: flex;
+    justify-content: space-around;
+    background-color: #1f2937;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+#hud p {
+    margin: 0;
+    font-size: 18px;
+}
+
+canvas {
+    background-color: #0f172a;
+    border: 3px solid white;
+    display: block;
+    margin: 0 auto;
+}
+
+#message {
+    font-size: 18px;
+    min-height: 24px;
+}
+
+#restart-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Echo Vault</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <h1>Echo Vault</h1>
+
+        <div id="hud">
+            <p>Time: <span id="time-display">0</span>s</p>
+            <p>Vault Noise: <span id="noise-display">10</span></p>
+            <p>Beacon Cooldown: <span id="cooldown-display">Ready</span></p>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <p id="message">Click anywhere inside the room to place a sound beacon.</p>
+
+        <button id="restart-button">Restart</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
