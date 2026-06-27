@@ -89,6 +89,7 @@ function gameLoop(timestamp) {
         updateCooldown(deltaTime);
         updateBeacons(deltaTime);
         updateGuards();
+        checkVaultCollision();
         updateHUD();
         drawGame();
 
@@ -184,6 +185,16 @@ function getDistance(x1, y1, x2, y2) {
     const dy = y2 - y1;
 
     return Math.sqrt(dx * dx + dy * dy);
+}
+
+function checkVaultCollision() {
+    guards.forEach(function(guard) {
+        const distanceToVault = getDistance(guard.x, guard.y, vault.x, vault.y);
+
+        if (distanceToVault <= VAULT_RADIUS + 15) {
+            endGame("lose");
+        }
+    });
 }
 
 function drawGame() {
