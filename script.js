@@ -207,10 +207,17 @@ function drawGame() {
 
 function drawVault() {
     ctx.beginPath();
+    ctx.arc(vault.x, vault.y, VAULT_RADIUS + vault.noiseLevel, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(250, 204, 21, 0.35)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
     ctx.arc(vault.x, vault.y, VAULT_RADIUS, 0, Math.PI * 2);
     ctx.fillStyle = "#facc15";
     ctx.fill();
     ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.fillStyle = "black";
@@ -222,18 +229,41 @@ function drawVault() {
 function drawGuards() {
     guards.forEach(function(guard) {
         ctx.beginPath();
+        ctx.moveTo(guard.x, guard.y);
+        ctx.lineTo(guard.targetX, guard.targetY);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
         ctx.arc(guard.x, guard.y, 15, 0, Math.PI * 2);
         ctx.fillStyle = "#ef4444";
         ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("G", guard.x, guard.y + 4);
     });
 }
 
 function drawBeacons() {
     beacons.forEach(function(beacon) {
         ctx.beginPath();
+        ctx.arc(beacon.x, beacon.y, beacon.strength, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.beginPath();
         ctx.arc(beacon.x, beacon.y, 12, 0, Math.PI * 2);
         ctx.fillStyle = "#38bdf8";
         ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(Math.ceil(beacon.timeLeft), beacon.x, beacon.y + 4);
     });
 }
 
