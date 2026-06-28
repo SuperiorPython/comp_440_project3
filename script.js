@@ -5,6 +5,7 @@ const timeDisplay = document.getElementById("time-display");
 const noiseDisplay = document.getElementById("noise-display");
 const cooldownDisplay = document.getElementById("cooldown-display");
 const messageDisplay = document.getElementById("message");
+const startButton = document.getElementById("start-button");
 const restartButton = document.getElementById("restart-button");
 
 let gameState;
@@ -26,7 +27,7 @@ const BEACON_COOLDOWN = 2;
 const BEACON_STRENGTH = 180;
 
 function initGame() {
-    gameState = "playing";
+    gameState = "start";
     survivalTime = 0;
     lastTimestamp = 0;
     beaconCooldown = 0;
@@ -51,6 +52,13 @@ function initGame() {
     drawGame();
 
     requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    gameState = "playing";
+    survivalTime = 0;
+    lastTimestamp = 0;
+    messageDisplay.textContent = "Protect the vault. Use beacons to lure guards away.";
 }
 
 function placeBeacon(event) {
@@ -280,5 +288,6 @@ function endGame(result) {
 
 canvas.addEventListener("click", placeBeacon);
 restartButton.addEventListener("click", initGame);
+startButton.addEventListener("click", startGame);
 
 initGame();
