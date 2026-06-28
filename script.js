@@ -19,10 +19,11 @@ let beaconCooldown;
 const WIN_TIME = 90;
 const VAULT_RADIUS = 30;
 const STARTING_VAULT_NOISE = 10;
-const VAULT_NOISE_GROWTH = 0.15;
+const VAULT_NOISE_GROWTH = 2.5;
+
 const BEACON_DURATION = 5;
 const BEACON_COOLDOWN = 2;
-const BEACON_STRENGTH = 60;
+const BEACON_STRENGTH = 180;
 
 function initGame() {
     gameState = "playing";
@@ -37,9 +38,9 @@ function initGame() {
     };
 
     guards = [
-        { x: 80, y: 80, speed: 1.5, targetX: vault.x, targetY: vault.y },
-        { x: 720, y: 80, speed: 1.5, targetX: vault.x, targetY: vault.y },
-        { x: 400, y: 440, speed: 1.5, targetX: vault.x, targetY: vault.y }
+    { x: 80, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
+    { x: 720, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
+    { x: 400, y: 440, speed: 0.85, targetX: vault.x, targetY: vault.y }
     ];
 
     beacons = [];
