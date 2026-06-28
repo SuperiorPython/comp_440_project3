@@ -20,12 +20,18 @@ let beaconCooldown;
 
 const WIN_TIME = 90;
 const VAULT_RADIUS = 30;
-const STARTING_VAULT_NOISE = 10;
-const VAULT_NOISE_GROWTH = 2.5;
+const STARTING_VAULT_NOISE = 20;
+const VAULT_NOISE_GROWTH = 1.5;
 
 const BEACON_DURATION = 5;
 const BEACON_COOLDOWN = 2;
 const BEACON_STRENGTH = 180;
+
+const GUARD_RADIUS = 15;
+const VAULT_SOUND_RADIUS = 60;
+const MAX_VAULT_SOUND_RADIUS = 230;
+const BEACON_SOUND_RADIUS = 160;
+const WANDER_TARGET_DISTANCE = 20;
 
 function initGame() {
     if (animationId) {
@@ -44,9 +50,9 @@ function initGame() {
     };
 
     guards = [
-        { x: 80, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
-        { x: 720, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
-        { x: 400, y: 440, speed: 0.85, targetX: vault.x, targetY: vault.y }
+        createGuard(80, 80, 0.85),
+        createGuard(720, 80, 0.85),
+        createGuard(400, 440, 0.85)
     ];
 
     beacons = [];
@@ -57,6 +63,17 @@ function initGame() {
     drawGame();
 
     animationId = requestAnimationFrame(gameLoop);
+}
+
+function createGuard(x, y, speed) {
+    return {
+        x: x,
+        y: y,
+        speed: speed,
+        targetX: x,
+        targetY: y,
+        mode: "wandering"
+    };
 }
 
 function startGame() {
@@ -152,35 +169,70 @@ function updateHUD() {
 
 function updateGuards() {
     guards.forEach(function(guard) {
-        const target = findLoudestSoundSource(guard);
+        const soundTarget = findSoundTargetInRange(guard);
 
-        guard.targetX = target.x;
-        guard.targetY = target.y;
+        if (soundTarget) {
+            guard.mode = "alert";
+            guard.targetX = soundTarget.x;
+            guard.targetY = soundTarget.y;
+        } else {
+            guard.mode = "wandering";
+            updateWanderTarget(guard);
+        }
 
         moveGuardTowardTarget(guard);
     });
 }
 
-function findLoudestSoundSource(guard) {
-    let loudestSource = {
-        x: vault.x,
-        y: vault.y,
-        strength: vault.noiseLevel
-    };
+function findSoundTargetInRange(guard) {
+    let bestTarget = null;
+    let bestPull = 0;
+
+    const currentVaultSoundRadius = Math.min(
+        VAULT_SOUND_RADIUS + vault.noiseLevel,
+        MAX_VAULT_SOUND_RADIUS
+    );
+
+    const distanceToVault = getDistance(guard.x, guard.y, vault.x, vault.y);
+
+    if (distanceToVault <= currentVaultSoundRadius) {
+        const vaultPull = vault.noiseLevel / Math.max(distanceToVault, 1);
+
+        bestTarget = {
+            x: vault.x,
+            y: vault.y
+        };
+
+        bestPull = vaultPull;
+    }
 
     beacons.forEach(function(beacon) {
-        const beaconDistance = getDistance(guard.x, guard.y, beacon.x, beacon.y);
-        const vaultDistance = getDistance(guard.x, guard.y, vault.x, vault.y);
+        const distanceToBeacon = getDistance(guard.x, guard.y, beacon.x, beacon.y);
 
-        const beaconPull = beacon.strength / Math.max(beaconDistance, 1);
-        const vaultPull = vault.noiseLevel / Math.max(vaultDistance, 1);
+        if (distanceToBeacon <= BEACON_SOUND_RADIUS) {
+            const beaconPull = beacon.strength / Math.max(distanceToBeacon, 1);
 
-        if (beaconPull > vaultPull) {
-            loudestSource = beacon;
+            if (beaconPull > bestPull) {
+                bestTarget = {
+                    x: beacon.x,
+                    y: beacon.y
+                };
+
+                bestPull = beaconPull;
+            }
         }
     });
 
-    return loudestSource;
+    return bestTarget;
+}
+
+function updateWanderTarget(guard) {
+    const distanceToTarget = getDistance(guard.x, guard.y, guard.targetX, guard.targetY);
+
+    if (distanceToTarget <= WANDER_TARGET_DISTANCE) {
+        guard.targetX = Math.random() * canvas.width;
+        guard.targetY = Math.random() * canvas.height;
+    }
 }
 
 function moveGuardTowardTarget(guard) {
@@ -205,7 +257,7 @@ function checkVaultCollision() {
     guards.forEach(function(guard) {
         const distanceToVault = getDistance(guard.x, guard.y, vault.x, vault.y);
 
-        if (distanceToVault <= VAULT_RADIUS + 15) {
+        if (distanceToVault <= VAULT_RADIUS + GUARD_RADIUS) {
             endGame("lose");
         }
     });
@@ -220,9 +272,14 @@ function drawGame() {
 }
 
 function drawVault() {
+    const currentVaultSoundRadius = Math.min(
+        VAULT_SOUND_RADIUS + vault.noiseLevel,
+        MAX_VAULT_SOUND_RADIUS
+    );
+
     ctx.beginPath();
-    ctx.arc(vault.x, vault.y, VAULT_RADIUS + vault.noiseLevel, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(250, 204, 21, 0.35)";
+    ctx.arc(vault.x, vault.y, currentVaultSoundRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(250, 204, 21, 0.25)";
     ctx.lineWidth = 3;
     ctx.stroke();
 
@@ -250,8 +307,14 @@ function drawGuards() {
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(guard.x, guard.y, 15, 0, Math.PI * 2);
-        ctx.fillStyle = "#ef4444";
+        ctx.arc(guard.x, guard.y, GUARD_RADIUS, 0, Math.PI * 2);
+
+        if (guard.mode === "alert") {
+            ctx.fillStyle = "#ef4444";
+        } else {
+            ctx.fillStyle = "#a855f7";
+        }
+
         ctx.fill();
 
         ctx.fillStyle = "white";
@@ -264,7 +327,7 @@ function drawGuards() {
 function drawBeacons() {
     beacons.forEach(function(beacon) {
         ctx.beginPath();
-        ctx.arc(beacon.x, beacon.y, beacon.strength, 0, Math.PI * 2);
+        ctx.arc(beacon.x, beacon.y, BEACON_SOUND_RADIUS, 0, Math.PI * 2);
         ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
         ctx.lineWidth = 3;
         ctx.stroke();
