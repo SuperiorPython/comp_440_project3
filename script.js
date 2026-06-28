@@ -11,6 +11,7 @@ const restartButton = document.getElementById("restart-button");
 let gameState;
 let survivalTime;
 let lastTimestamp;
+let animationId;
 
 let vault;
 let guards;
@@ -27,6 +28,10 @@ const BEACON_COOLDOWN = 2;
 const BEACON_STRENGTH = 180;
 
 function initGame() {
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+    }
+
     gameState = "start";
     survivalTime = 0;
     lastTimestamp = 0;
@@ -39,9 +44,9 @@ function initGame() {
     };
 
     guards = [
-    { x: 80, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
-    { x: 720, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
-    { x: 400, y: 440, speed: 0.85, targetX: vault.x, targetY: vault.y }
+        { x: 80, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
+        { x: 720, y: 80, speed: 0.85, targetX: vault.x, targetY: vault.y },
+        { x: 400, y: 440, speed: 0.85, targetX: vault.x, targetY: vault.y }
     ];
 
     beacons = [];
@@ -51,7 +56,7 @@ function initGame() {
     updateHUD();
     drawGame();
 
-    requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 function startGame() {
@@ -107,7 +112,7 @@ function gameLoop(timestamp) {
         }
     }
 
-    requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 function updateVaultNoise(deltaTime) {
