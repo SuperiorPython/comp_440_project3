@@ -17,6 +17,7 @@ let vault;
 let guards;
 let beacons;
 let beaconCooldown;
+let lastGuardSpawnTime;
 
 const WIN_TIME = 90;
 const VAULT_RADIUS = 30;
@@ -33,6 +34,9 @@ const MAX_VAULT_SOUND_RADIUS = 230;
 const BEACON_SOUND_RADIUS = 160;
 const WANDER_TARGET_DISTANCE = 20;
 
+const GUARD_SPAWN_INTERVAL = 15;
+const STARTING_GUARD_COUNT = 3;
+
 function initGame() {
     if (animationId) {
         cancelAnimationFrame(animationId);
@@ -42,6 +46,7 @@ function initGame() {
     survivalTime = 0;
     lastTimestamp = 0;
     beaconCooldown = 0;
+    lastGuardSpawnTime = 0;
 
     vault = {
         x: canvas.width / 2,
@@ -80,6 +85,7 @@ function startGame() {
     gameState = "playing";
     survivalTime = 0;
     lastTimestamp = 0;
+    lastGuardSpawnTime = 0;
     messageDisplay.textContent = "Protect the vault. Use beacons to lure guards away.";
 }
 
@@ -89,6 +95,14 @@ function placeBeacon(event) {
     }
 
     if (beaconCooldown > 0) {
+        messageDisplay.textContent = "Beacon is recharging.";
+        return;
+    }
+
+    const maxActiveBeacons = getMaxActiveBeacons();
+
+    if (beacons.length >= maxActiveBeacons) {
+        messageDisplay.textContent = "Maximum active beacons reached.";
         return;
     }
 
@@ -103,6 +117,12 @@ function placeBeacon(event) {
 
     beacons.push(beacon);
     beaconCooldown = BEACON_COOLDOWN;
+
+    messageDisplay.textContent = "Beacon placed.";
+}
+
+function getMaxActiveBeacons() {
+    return Math.floor(guards.length / 2);
 }
 
 function gameLoop(timestamp) {
@@ -119,6 +139,7 @@ function gameLoop(timestamp) {
         updateVaultNoise(deltaTime);
         updateCooldown(deltaTime);
         updateBeacons(deltaTime);
+        spawnGuardsOverTime();
         updateGuards();
         checkVaultCollision();
         updateHUD();
@@ -130,6 +151,32 @@ function gameLoop(timestamp) {
     }
 
     animationId = requestAnimationFrame(gameLoop);
+}
+
+function spawnGuardsOverTime() {
+    if (survivalTime - lastGuardSpawnTime >= GUARD_SPAWN_INTERVAL) {
+        const spawnPoint = getRandomSpawnPoint();
+        const speed = 0.85 + guards.length * 0.03;
+
+        guards.push(createGuard(spawnPoint.x, spawnPoint.y, speed));
+        lastGuardSpawnTime = survivalTime;
+
+        messageDisplay.textContent = "Another guard entered the room.";
+    }
+}
+
+function getRandomSpawnPoint() {
+    const side = Math.floor(Math.random() * 4);
+
+    if (side === 0) {
+        return { x: 30, y: Math.random() * canvas.height };
+    } else if (side === 1) {
+        return { x: canvas.width - 30, y: Math.random() * canvas.height };
+    } else if (side === 2) {
+        return { x: Math.random() * canvas.width, y: 30 };
+    } else {
+        return { x: Math.random() * canvas.width, y: canvas.height - 30 };
+    }
 }
 
 function updateVaultNoise(deltaTime) {
@@ -160,10 +207,12 @@ function updateHUD() {
     timeDisplay.textContent = Math.floor(survivalTime);
     noiseDisplay.textContent = Math.floor(vault.noiseLevel);
 
+    const maxActiveBeacons = getMaxActiveBeacons();
+
     if (beaconCooldown <= 0) {
-        cooldownDisplay.textContent = "Ready";
+        cooldownDisplay.textContent = "Ready | Beacons: " + beacons.length + "/" + maxActiveBeacons;
     } else {
-        cooldownDisplay.textContent = beaconCooldown.toFixed(1) + "s";
+        cooldownDisplay.textContent = beaconCooldown.toFixed(1) + "s | Beacons: " + beacons.length + "/" + maxActiveBeacons;
     }
 }
 
